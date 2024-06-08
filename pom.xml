@@ -56,6 +56,11 @@
             <artifactId>activemq-client</artifactId>
             <version>5.15.12</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-all</artifactId>
+            <version>5.15.14</version>
+        </dependency>
 
 
 

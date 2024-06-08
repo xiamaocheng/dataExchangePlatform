@@ -14,12 +14,55 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.adapter.MySqlJDBCAdapter;
 
 import java.io.IOException;
+import java.util.Enumeration;
 
 
 public class DataExchange {
 
     private String brokerURL = "tcp://localhost:61616";
     private String queueName = "data.exchange.queue";
+
+    //添加队列
+    public void addQueue() throws JMSException {
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(queueName);
+        MessageProducer producer = session.createProducer(queue);
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        String message = null;
+        producer.send(session.createTextMessage(message));
+    }
+
+
+    // 删除队列
+    public void removeQueue() throws JMSException {
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(queueName);
+        session.unsubscribe(queueName);
+    }
+
+
+    //查看队列的大小和状态
+    public void getQueueStatus() throws JMSException {
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(queueName);
+        QueueBrowser browser = session.createBrowser(queue);
+        Enumeration<?> enumeration = browser.getEnumeration();
+        while (enumeration.hasMoreElements()) {
+            TextMessage textMessage = (TextMessage) enumeration.nextElement();
+            System.out.println(textMessage.getText());
+        }
+    }
+
+
 
     public void sendMessage(String message) throws JMSException, IOException {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_USER, ActiveMQConnection.DEFAULT_PASSWORD, brokerURL);
@@ -70,7 +113,10 @@ public class DataExchange {
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = session.createQueue(queueName);
-        MessageConsumer consumer = session.createConsumer(destination,"color = 'red'");
+//        MessageConsumer consumer = session.createConsumer(destination,"color = 'red'");
+        //jms过滤text消息
+        //
+        MessageConsumer consumer = session.createConsumer(destination);
 
         TextMessage message = (TextMessage) consumer.receive(1000); // Wait 1 second for a message.
         String receivedMessage = null;

@@ -4,6 +4,7 @@ import javax.jms.*;
 import javax.sql.DataSource;
 
 import com.data.dataexchangeplatform.packet.DataExchangeMessage;
+import com.data.dataexchangeplatform.router.MyMessageListener;
 import com.frameworkset.commons.dbcp2.BasicDataSource;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -69,11 +70,14 @@ public class DataExchange {
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = session.createQueue(queueName);
-        MessageConsumer consumer = session.createConsumer(destination);
+        MessageConsumer consumer = session.createConsumer(destination,"color = 'red'");
 
         TextMessage message = (TextMessage) consumer.receive(1000); // Wait 1 second for a message.
         String receivedMessage = null;
         if (message != null) {
+//            设置过滤器
+            consumer.setMessageListener(new MyMessageListener());
+            System.out.println("Received message: " + message.getText());
             receivedMessage = message.getText();
         }
 

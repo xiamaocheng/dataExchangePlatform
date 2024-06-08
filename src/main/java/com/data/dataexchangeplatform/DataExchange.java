@@ -1,27 +1,62 @@
 package com.data.dataexchangeplatform;
 
 import javax.jms.*;
+import javax.sql.DataSource;
 
 import com.data.dataexchangeplatform.packet.DataExchangeMessage;
+import com.frameworkset.commons.dbcp2.BasicDataSource;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.jdbc.adapter.MySqlJDBCAdapter;
+
+import java.io.IOException;
+
 
 public class DataExchange {
 
     private String brokerURL = "tcp://localhost:61616";
     private String queueName = "data.exchange.queue";
 
-    public void sendMessage(String message) throws JMSException {
+    public void sendMessage(String message) throws JMSException, IOException {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_USER, ActiveMQConnection.DEFAULT_PASSWORD, brokerURL);
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//使用Activatemq 配置持久化存储
+
+        BrokerService brokerService = new BrokerService();
+        BasicDataSource yourDataSource = new BasicDataSource();
+        yourDataSource.setUrl("jdbc:mysql://localhost:3306/activemq?useUnicode=true&characterEncoding=utf8");
+        yourDataSource.setUsername("root");
+        yourDataSource.setPassword("root");
+        yourDataSource.setDriverClassName("com.mysql.jdbc.Driver");
+
+
+        JDBCPersistenceAdapter persistenceAdapter = new JDBCPersistenceAdapter();
+        persistenceAdapter.setDataSource(yourDataSource);
+        persistenceAdapter.setAdapter(new MySqlJDBCAdapter());
+        brokerService.setPersistenceAdapter(persistenceAdapter);
+
+
+
+//        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+
         Destination destination = session.createQueue(queueName);
         MessageProducer producer = session.createProducer(destination);
 
         TextMessage msg = session.createTextMessage(message);
+
+        // 设置消息的持久性标志
+        msg.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
+
+
         producer.send(msg);
+
+        session.commit();
 
         session.close();
         connection.close();
@@ -66,7 +101,7 @@ public class DataExchange {
             // Receive a message
             String message = de.receiveMessage();
             System.out.println("Received message: " + message);
-        } catch (JMSException e) {
+        } catch (JMSException | IOException e) {
             e.printStackTrace();
         }
     }

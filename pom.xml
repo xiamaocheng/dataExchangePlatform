@@ -56,6 +56,21 @@
             <artifactId>activemq-client</artifactId>
             <version>5.15.12</version>
         </dependency>
+
+
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-jdbc-store</artifactId>
+            <version>5.15.12</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bbossgroups</groupId>
+            <artifactId>bboss-persistent</artifactId>
+            <version>5.9.1</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>

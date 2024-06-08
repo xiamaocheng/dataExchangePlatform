@@ -1,9 +1,7 @@
-package com.data.dataexchangeplatform;
+package com.data.dataexchangeplatform.controller;
 
 import javax.jms.*;
-import javax.sql.DataSource;
 
-import com.data.dataexchangeplatform.packet.DataExchangeMessage;
 import com.data.dataexchangeplatform.router.MyMessageListener;
 import com.frameworkset.commons.dbcp2.BasicDataSource;
 import org.apache.activemq.ActiveMQConnection;
@@ -12,17 +10,23 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.adapter.MySqlJDBCAdapter;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.Enumeration;
 
 
-public class DataExchange {
+@RestController
+@RequestMapping("/queueManager")
+public class queueController {
 
     private String brokerURL = "tcp://localhost:61616";
     private String queueName = "data.exchange.queue";
 
     //添加队列
+    @GetMapping("/addQueue")
     public void addQueue() throws JMSException {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
         Connection connection = connectionFactory.createConnection();
@@ -36,6 +40,7 @@ public class DataExchange {
     }
 
 
+    @GetMapping("/removeQueue")
     // 删除队列
     public void removeQueue() throws JMSException {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
@@ -48,6 +53,7 @@ public class DataExchange {
 
 
     //查看队列的大小和状态
+    @GetMapping("/getQueueStatus")
     public void getQueueStatus() throws JMSException {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
         Connection connection = connectionFactory.createConnection();
@@ -134,25 +140,5 @@ public class DataExchange {
     }
 
 
-    //重构成框架
 
-    public static void main(String[] args) {
-        DataExchange de = new DataExchange();
-        try {
-            // Send a message
-            //发送 DataExchangeMessage
-            DataExchangeMessage dataExchangeMessage = new DataExchangeMessage("sender", "receiver", "Hello, MQ!");
-
-            System.out.println("Sending message: " + dataExchangeMessage.getPayload());
-            de.sendMessage(dataExchangeMessage.getPayload());
-
-
-
-            // Receive a message
-            String message = de.receiveMessage();
-            System.out.println("Received message: " + message);
-        } catch (JMSException | IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
